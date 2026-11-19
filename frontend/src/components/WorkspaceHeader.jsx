@@ -4,17 +4,35 @@ import {
 } from 'lucide-react';
 
 export default function WorkspaceHeader({
-  workspaceTitle = 'Evaluator Suite',
-  workspaceBadge = 'EVALUATOR COCKPIT',
-  workspaceType = 'evaluator', // 'evaluator' | 'admin' | 'candidate'
+  workspaceTitle,
+  workspaceBadge,
+  workspaceType,
+  role,
   activeTab,
   tabs = [],
   onSelectTab,
+  onTabChange,
   user,
   onLogout,
   onNavigateRole,
   dbLatency = 1.7
 }) {
+  const currentRole = role || workspaceType || user?.role || 'evaluator';
+  
+  const computedTitle = workspaceTitle || (
+    currentRole === 'candidate' ? 'Candidate Assessment Room' :
+    currentRole === 'admin' ? 'Admin Governance Suite' :
+    'Evaluator Suite'
+  );
+
+  const computedBadge = workspaceBadge || (
+    currentRole === 'candidate' ? 'CANDIDATE COCKPIT' :
+    currentRole === 'admin' ? 'ADMIN GOVERNANCE HUB' :
+    'EVALUATOR COCKPIT'
+  );
+
+  const handleTabSelect = onSelectTab || onTabChange;
+
   const getInitials = (name) => {
     if (!name) return 'AJ';
     const parts = name.split(' ');
@@ -23,14 +41,14 @@ export default function WorkspaceHeader({
   };
 
   const displayName = user?.full_name || (
-    workspaceType === 'candidate' ? 'Sri ram (Candidate #01)' :
-    workspaceType === 'admin' ? 'Platform Administrator' :
+    currentRole === 'candidate' ? 'Sri ram (Candidate #01)' :
+    currentRole === 'admin' ? 'Platform Administrator' :
     'Dr. Mounika (Lead Evaluator)'
   );
 
   const displayEmail = user?.email || (
-    workspaceType === 'candidate' ? 'candidate@antigravity.ai' :
-    workspaceType === 'admin' ? 'admin@antigravity.ai' :
+    currentRole === 'candidate' ? 'candidate@antigravity.ai' :
+    currentRole === 'admin' ? 'admin@antigravity.ai' :
     'evaluator@antigravity.ai'
   );
 
@@ -88,7 +106,7 @@ export default function WorkspaceHeader({
               letterSpacing: '0.04em',
               color: '#ffffff'
             }}>
-              {workspaceTitle}
+              {computedTitle}
             </span>
 
             {/* Active Workspace Pill */}
@@ -100,26 +118,26 @@ export default function WorkspaceHeader({
                 letterSpacing: '0.06em',
                 padding: '2px 8px',
                 borderRadius: '999px',
-                background: workspaceType === 'candidate' 
+                background: currentRole === 'candidate' 
                   ? 'rgba(16, 185, 129, 0.16)' 
-                  : workspaceType === 'admin' 
+                  : currentRole === 'admin' 
                   ? 'rgba(245, 158, 11, 0.16)' 
                   : 'rgba(45, 212, 191, 0.16)',
-                color: workspaceType === 'candidate' 
+                color: currentRole === 'candidate' 
                   ? '#34d399' 
-                  : workspaceType === 'admin' 
+                  : currentRole === 'admin' 
                   ? '#fbbf24' 
                   : '#2dd4bf',
                 border: `1px solid ${
-                  workspaceType === 'candidate' 
+                  currentRole === 'candidate' 
                     ? 'rgba(16, 185, 129, 0.35)' 
-                    : workspaceType === 'admin' 
+                    : currentRole === 'admin' 
                     ? 'rgba(245, 158, 11, 0.35)' 
                     : 'rgba(45, 212, 191, 0.35)'
                 }`
               }}
             >
-              {workspaceBadge}
+              {computedBadge}
             </span>
           </div>
 
@@ -171,7 +189,7 @@ export default function WorkspaceHeader({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => onSelectTab && onSelectTab(tab.id)}
+                onClick={() => handleTabSelect && handleTabSelect(tab.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

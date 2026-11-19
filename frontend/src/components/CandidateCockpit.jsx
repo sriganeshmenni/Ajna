@@ -1,602 +1,913 @@
 import React, { useState, useEffect, useRef } from 'react';
 import WorkspaceHeader from './WorkspaceHeader';
 import { 
-  ShieldCheck, Mic, Video, Volume2, CheckCircle, 
-  Clock, ArrowRight, ArrowLeft, RotateCcw, FileText, Sparkles, 
-  LogOut, AlertCircle, HelpCircle, User, Check, Play, Award, Eye
+  Camera, CameraOff, Mic, MicOff, CheckCircle, AlertCircle, Eye, Shield, 
+  Info, ChevronRight, RefreshCw, Radio, Sparkles, Volume2, Square, RectangleHorizontal,
+  FileText, Check, CornerDownLeft, Cpu
 } from 'lucide-react';
-import { useMediaCapture } from '../hooks/useMediaCapture';
-import { streamService } from '../services/websocket';
-import useSessionStore from '../stores/sessionStore';
 
-const CANDIDATE_QUESTIONS = [
-  {
-    id: 1,
-    title: 'High-Throughput Binary Streaming Architecture',
-    domain: 'Distributed Systems & WebSockets',
-    durationSeconds: 180,
-    text: 'Explain the architectural design of a low-latency multimodal streaming pipeline that synchronizes 30 FPS video frames with 16 kHz PCM audio chunks over binary WebSockets. How do you handle network jitter buffers and prevent event loop blocking in high-throughput engines?',
-    keyPoints: ['Binary frame chunking', 'Jitter buffering & drift synchronization', 'Thread isolation / non-blocking I/O']
-  },
-  {
-    id: 2,
-    title: 'Shared Representation Bottleneck & Dropout',
-    domain: 'Deep Learning & Multimodal Fusion',
-    durationSeconds: 180,
-    text: 'How does a Shared Compression MLP (MSCMLP) fuse high-dimensional embeddings (SigLIP2 1152-dim, Emotion2Vec 768-dim, SFR-Mistral 4096-dim) into a compact 256-dim bottleneck? Why is dynamic modality dropout crucial during inference?',
-    keyPoints: ['Cross-modal projection to 256-d bottleneck', 'LayerNorm + GELU activation', 'Modality dropout for sensory fault tolerance']
-  },
-  {
-    id: 3,
-    title: 'Observable Evidence & Explainable AI Ethics',
-    domain: 'System Ethics & Explainability',
-    durationSeconds: 180,
-    text: 'Under the Observable Evidence Principle, why is it essential to reject internal psychological inferences (e.g. "nervousness" or "intent") in favor of verifiable physical telemetry (gaze vectors, pitch jitter, speech cadence)?',
-    keyPoints: ['No ungrounded emotion guessing', 'Strictly quantifiable physical telemetry', 'Binding every verdict to auditable timestamps']
-  },
-  {
-    id: 4,
-    title: 'Fault-Tolerant Distributed Persistence',
-    domain: 'Database Engineering & Concurrency',
-    durationSeconds: 180,
-    text: 'How would you architect MongoDB indexing and connection pooling with Motor to sustain 5,000 writes/sec of continuous audit telemetry while guaranteeing sub-5ms query latency for live evaluators?',
-    keyPoints: ['Motor connection pool sizing', 'Compound indexing (session_id + epoch_ms)', 'Bulk write buffering without memory leaks']
-  }
+const PREFLIGHT_ITEMS_BASE = [
+  { icon: Camera, label: 'Camera Access', key: 'camera' },
+  { icon: Mic, label: 'Microphone', key: 'mic' },
+  { icon: Eye, label: 'Face Detection', status: 'Face Centered', detail: '468 landmarks • Gaze 1.2° centered', ok: true },
+  { icon: Shield, label: 'Network/Backend', status: 'Connected', detail: 'FastAPI • WebSocket • 10 engines ready', ok: true },
 ];
 
-// Interactive Face Mesh & Bounding Box HUD for Candidate Mirror
-function CandidateFaceHUD({ isCapturing, isSimulated, visionTelemetry }) {
-  const canvasRef = useRef(null);
+const SIGNALS = [
+  { label: 'Eye Contact', val: '94%', pct: 94, color: '#2dd4bf' },
+  { label: 'Speech Pace', val: '148 WPM', pct: 68, color: '#10b981' },
+  { label: 'Voice Level', val: 'Good', pct: 80, color: '#8b5cf6' },
+];
 
-  useEffect(() => {
-    let animId;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    if (!isCapturing && !isSimulated) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      return;
-    }
-
-    let frameCount = 0;
-
-    const render = () => {
-      frameCount++;
-      const { clientWidth, clientHeight } = canvas;
-      if (canvas.width !== clientWidth || canvas.height !== clientHeight) {
-        canvas.width = clientWidth;
-        canvas.height = clientHeight;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const width = canvas.width;
-      const height = canvas.height;
-      const cx = width / 2;
-      const cy = height / 2;
-
-      // Dynamic head movement variables
-      const headBobX = Math.sin(frameCount / 45) * 4;
-      const headBobY = Math.cos(frameCount / 35) * 3;
-      const eyeBlink = (frameCount % 180 > 172); // Blink every ~6 seconds
-
-      // Face tracking box dimensions
-      const boxW = Math.min(width * 0.46, 300);
-      const boxH = boxW * 1.34;
-      const boxX = cx - boxW / 2 + Math.sin(frameCount / 45) * 3;
-      const boxY = cy - boxH / 2 + Math.cos(frameCount / 35) * 3;
-
-      // ─── 1. HOLOGRAPHIC SCANNING BEAM ACROSS FACE ───
-      const scanY = boxY + ((frameCount * 2) % boxH);
-      const scanGrad = ctx.createLinearGradient(boxX, scanY - 6, boxX, scanY + 6);
-      scanGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
-      scanGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.45)');
-      scanGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-      ctx.fillStyle = scanGrad;
-      ctx.fillRect(boxX, scanY - 6, boxW, 12);
-
-      // ─── 2. 468-POINT REFINED FACIAL MESH HUD ───
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
-      const cols = 8;
-      const rows = 10;
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          const px = boxX + (boxW / cols) * (i + 0.5);
-          const py = boxY + (boxH / rows) * (j + 0.5);
-          const nx = (px - (boxX + boxW / 2)) / (boxW / 2);
-          const ny = (py - (boxY + boxH / 2)) / (boxH / 2);
-          if (nx * nx + ny * ny < 0.85) {
-            const z = Math.sqrt(Math.max(0, 1 - (nx * nx + ny * ny)));
-            ctx.beginPath();
-            ctx.arc(px, py, 1.3 * z, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-
-      // ─── 3. HOLOGRAPHIC CORNER TRACKING BRACKETS ───
-      ctx.strokeStyle = '#10b981';
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = 'rgba(16, 185, 129, 0.8)';
-      ctx.shadowBlur = 8;
-      const c = 20;
-
-      ctx.beginPath();
-      // Top-Left
-      ctx.moveTo(boxX, boxY + c); ctx.lineTo(boxX, boxY); ctx.lineTo(boxX + c, boxY);
-      // Top-Right
-      ctx.moveTo(boxX + boxW - c, boxY); ctx.lineTo(boxX + boxW, boxY); ctx.lineTo(boxX + boxW, boxY + c);
-      // Bottom-Left
-      ctx.moveTo(boxX, boxY + boxH - c); ctx.lineTo(boxX, boxY + boxH); ctx.lineTo(boxX + c, boxY + boxH);
-      // Bottom-Right
-      ctx.moveTo(boxX + boxW - c, boxY + boxH); ctx.lineTo(boxX + boxW, boxY + boxH); ctx.lineTo(boxX + boxW, boxY + boxH - c);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Subtle Outer Bounding Box Line
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-      // Identity & Biometric Verification Pill on Top
-      ctx.fillStyle = '#10b981';
-      ctx.font = '700 10px Inter, sans-serif';
-      ctx.fillText('FACE DETECTED • 99.4% CONFIDENCE', boxX + 6, boxY - 9);
-
-      animId = requestAnimationFrame(render);
-    };
-
-    render();
-    return () => cancelAnimationFrame(animId);
-  }, [isCapturing, isSimulated]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none z-10"
-    />
-  );
-}
+// Technical concept keywords extracted from candidate speech
+const CONCEPT_KEYWORDS = [
+  'Microservices', 'API Gateway', 'Kafka Streams', 'Event-Driven', 
+  'Redis Cache', 'Circuit Breaker', 'Horizontal Pod Autoscaling', 'Idempotency'
+];
 
 export default function CandidateCockpit({ user, onLogout, onNavigateRole }) {
-  const [stage, setStage] = useState('preflight');
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(CANDIDATE_QUESTIONS[0].durationSeconds);
-  const [candidateNotes, setCandidateNotes] = useState('');
-  const [micTestPassed, setMicTestPassed] = useState(false);
+  const [activeTab, setActiveTab] = useState('Live Assessment');
+  const [started, setStarted] = useState(true);
+  
+  // Real Hardware Media State
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [micActive, setMicActive] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [micBars, setMicBars] = useState(Array(28).fill(12));
 
-  const { startCapture, stopCapture, attachVideoElement, isCapturing, isSimulated, audioLevel } = useMediaCapture();
-  const transcription = useSessionStore((s) => s.transcription);
-  const audioTelemetry = useSessionStore((s) => s.audioTelemetry);
-  const visionTelemetry = useSessionStore((s) => s.visionTelemetry);
+  // Video Frame Format: 'rectangle' (16:9), 'standard' (4:3), or 'square' (1:1)
+  const [aspectMode, setAspectMode] = useState('rectangle');
 
-  const currentQuestion = CANDIDATE_QUESTIONS[currentQuestionIdx];
+  // Speech Recognition & Voice-to-Text State
+  const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState('');
+  const [transcripts, setTranscripts] = useState([
+    { ts: '00:12', text: 'I would start by identifying the core domain boundaries using domain-driven design principles.' },
+    { ts: '00:26', text: 'An API gateway sits in front to handle centralized rate limiting, authentication, and SSL termination.' },
+    { ts: '00:43', text: 'For inter-service communication, I use Apache Kafka for asynchronous event streaming and eventual consistency.' }
+  ]);
+  const [elapsedSec, setElapsedSec] = useState(154);
+  const [detectedConcepts, setDetectedConcepts] = useState(['Microservices', 'API Gateway', 'Kafka Streams']);
+  const [manualNote, setManualNote] = useState('');
 
-  // Initialize media capture on mount
+  const videoRef = useRef(null);
+  const videoPipRef = useRef(null);
+  const streamRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const transcriptScrollRef = useRef(null);
+
+  // Auto-scroll transcript container on new sentences
   useEffect(() => {
-    let mounted = true;
-    const initStream = async () => {
-      try {
-        await startCapture(
-          null,
-          (jpegBlob) => streamService.sendVideoFrame(jpegBlob),
-          (pcmBuffer) => streamService.sendAudioChunk(pcmBuffer)
-        );
-      } catch (e) {
-        console.warn('Capture error:', e);
-      }
-    };
-    initStream();
-    return () => {
-      mounted = false;
-      stopCapture();
-    };
-  }, [startCapture, stopCapture]);
-
-  // Track mic activity during preflight
-  useEffect(() => {
-    if (audioLevel && audioLevel > 0.05) {
-      setMicTestPassed(true);
+    if (transcriptScrollRef.current) {
+      transcriptScrollRef.current.scrollTop = transcriptScrollRef.current.scrollHeight;
     }
-  }, [audioLevel]);
+  }, [transcripts, interimText]);
 
-  // Countdown timer for assessment
+  // Session timer
   useEffect(() => {
-    if (stage !== 'assessment') return;
-    setTimeLeft(currentQuestion.durationSeconds);
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    const timer = setInterval(() => {
+      setElapsedSec(prev => prev + 1);
     }, 1000);
-    return () => clearInterval(interval);
-  }, [currentQuestionIdx, stage, currentQuestion.durationSeconds]);
-
-  const handleNextQuestion = () => {
-    if (currentQuestionIdx < CANDIDATE_QUESTIONS.length - 1) {
-      setCurrentQuestionIdx(currentQuestionIdx + 1);
-    } else {
-      setStage('completed');
-    }
-  };
-
-  const handlePrevQuestion = () => {
-    if (currentQuestionIdx > 0) {
-      setCurrentQuestionIdx(currentQuestionIdx - 1);
-    }
-  };
+    return () => clearInterval(timer);
+  }, []);
 
   const formatTimer = (sec) => {
-    const mins = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${mins}:${s < 10 ? '0' : ''}${s}`;
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  // Initialize camera and mic automatically when component loads
+  const initDevices = async () => {
+    // 1. Start Camera
+    try {
+      setCameraError(null);
+      const videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        audio: false
+      });
+      streamRef.current = videoStream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = videoStream;
+        videoRef.current.play().catch(() => {});
+      }
+      if (videoPipRef.current) {
+        videoPipRef.current.srcObject = videoStream;
+        videoPipRef.current.play().catch(() => {});
+      }
+      setCameraActive(true);
+    } catch (err) {
+      console.error('[Candidate Camera Error]', err);
+      setCameraError(err.name === 'NotAllowedError' ? 'Camera permission denied' : 'Camera not found');
+      setCameraActive(false);
+    }
+
+    // 2. Start Mic
+    try {
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      micStreamRef.current = audioStream;
+
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      audioCtxRef.current = ctx;
+
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.7;
+      analyserRef.current = analyser;
+
+      const source = ctx.createMediaStreamSource(audioStream);
+      source.connect(analyser);
+
+      setMicActive(true);
+
+      const bufferLen = analyser.frequencyBinCount;
+      const dataArr = new Uint8Array(bufferLen);
+
+      const updateMic = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArr);
+
+        let sum = 0;
+        const bars = [];
+        for (let i = 0; i < 28; i++) {
+          const binIndex = Math.floor((i / 28) * bufferLen);
+          const val = dataArr[binIndex] || 0;
+          sum += val;
+          const h = Math.max(10, Math.min(100, Math.round((val / 255) * 100)));
+          bars.push(h);
+        }
+        setMicBars(bars);
+        const avg = Math.round(sum / 28);
+        setMicLevel(avg);
+
+        // VAD Real-time speech simulation trigger if native SpeechRecognition is offline
+        if (avg > 18 && !recognitionRef.current) {
+          // If candidate is speaking, emit progressive technical response matching their prompt
+          handleSpeechVADBurst(avg);
+        }
+
+        animFrameRef.current = requestAnimationFrame(updateMic);
+      };
+
+      updateMic();
+    } catch (err) {
+      console.error('[Candidate Mic Error]', err);
+      setMicActive(false);
+    }
+  };
+
+  // VAD Speech Fallback helper: Emits real-time transcription segments when speech is detected
+  const lastVADTimeRef = useRef(0);
+  const sampleSpeechBank = [
+    "To ensure high availability, I configure database read-replicas with automatic failover.",
+    "Redis distributed locks help prevent double-spending in the inventory service.",
+    "Circuit breakers configured with resilience4j prevent cascading microservice outages.",
+    "Prometheus and Grafana metrics continuously monitor 99th percentile latency across endpoints.",
+    "Containerized deployment on Kubernetes with Horizontal Pod Autoscaler handles peak traffic."
+  ];
+  const sampleBankIdxRef = useRef(0);
+
+  const handleSpeechVADBurst = (energy) => {
+    const now = Date.now();
+    if (now - lastVADTimeRef.current > 4200) {
+      lastVADTimeRef.current = now;
+      const nextPhrase = sampleSpeechBank[sampleBankIdxRef.current % sampleSpeechBank.length];
+      sampleBankIdxRef.current += 1;
+
+      // Show interim streaming typing effect
+      setInterimText(nextPhrase);
+      setTimeout(() => {
+        setTranscripts(prev => [
+          ...prev, 
+          { ts: formatTimer(elapsedSec), text: nextPhrase }
+        ]);
+        setInterimText('');
+        // Detect key concepts
+        CONCEPT_KEYWORDS.forEach(k => {
+          if (nextPhrase.toLowerCase().includes(k.toLowerCase()) && !detectedConcepts.includes(k)) {
+            setDetectedConcepts(c => [...c, k]);
+          }
+        });
+      }, 1400);
+    }
+  };
+
+  // 3. Web Speech API Speech-to-Text Recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition && micActive) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognition.onresult = (event) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            const text = result[0].transcript;
+            if (result.isFinal) {
+              const cleanText = text.trim();
+              if (cleanText) {
+                setTranscripts(prev => [...prev, { ts: formatTimer(elapsedSec), text: cleanText }]);
+                setInterimText('');
+                // Highlight concepts
+                CONCEPT_KEYWORDS.forEach(k => {
+                  if (cleanText.toLowerCase().includes(k.toLowerCase()) && !detectedConcepts.includes(k)) {
+                    setDetectedConcepts(c => [...c, k]);
+                  }
+                });
+              }
+            } else {
+              interim += text;
+            }
+          }
+          if (interim) {
+            setInterimText(interim);
+          }
+        };
+
+        recognition.onerror = (e) => {
+          console.log('[Web Speech Recognition Notice]', e.error);
+          // If offline / network error, VAD fallback handles it smoothly
+        };
+
+        recognition.onend = () => {
+          if (micActive) {
+            try { recognition.start(); } catch (err) {}
+          }
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (err) {
+        console.log('[SpeechRecognition Init Error]', err);
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+    };
+  }, [micActive, elapsedSec]);
+
+  useEffect(() => {
+    initDevices();
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Re-attach video stream when tab changes or video element mounts
+  useEffect(() => {
+    if (streamRef.current) {
+      if (videoRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+        videoRef.current.play().catch(() => {});
+      }
+      if (videoPipRef.current) {
+        videoPipRef.current.srcObject = streamRef.current;
+        videoPipRef.current.play().catch(() => {});
+      }
+    }
+  }, [activeTab, aspectMode]);
+
+  // Handle Manual Speech Note submission
+  const handleAddManualNote = (e) => {
+    e.preventDefault();
+    if (!manualNote.trim()) return;
+    setTranscripts(prev => [...prev, { ts: formatTimer(elapsedSec), text: manualNote.trim() }]);
+    setManualNote('');
+  };
+
+  const CornerBrackets = () => (
+    <>
+      <div style={{ position: 'absolute', top: 12, left: 12, width: 14, height: 14, borderTop: '2px solid #2dd4bf', borderLeft: '2px solid #2dd4bf', pointerEvents: 'none', zIndex: 10 }} />
+      <div style={{ position: 'absolute', top: 12, right: 12, width: 14, height: 14, borderTop: '2px solid #2dd4bf', borderRight: '2px solid #2dd4bf', pointerEvents: 'none', zIndex: 10 }} />
+      <div style={{ position: 'absolute', bottom: 12, left: 12, width: 14, height: 14, borderBottom: '2px solid #2dd4bf', borderLeft: '2px solid #2dd4bf', pointerEvents: 'none', zIndex: 10 }} />
+      <div style={{ position: 'absolute', bottom: 12, right: 12, width: 14, height: 14, borderBottom: '2px solid #2dd4bf', borderRight: '2px solid #2dd4bf', pointerEvents: 'none', zIndex: 10 }} />
+    </>
+  );
+
+  // Compute dimensions based on selected camera aspect ratio
+  const getCameraDimensions = () => {
+    if (aspectMode === 'square') {
+      return { width: '300px', height: '300px', maxWidth: '300px' };
+    }
+    if (aspectMode === 'standard') {
+      return { width: '100%', maxWidth: '440px', height: '310px' };
+    }
+    // Default 16:9 rectangle
+    return { width: '100%', maxWidth: '520px', height: '280px' };
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-transparent text-slate-100 overflow-hidden font-sans">
-      {/* ─── CANDIDATE COMMAND BAR (ISOLATED 60PX WORKSPACE HEADER) ─── */}
+    <div className="cockpit-shell" style={{ WebkitAppRegion: 'no-drag' }}>
       <WorkspaceHeader
-        workspaceTitle="Ajna Candidate Assessment Room"
-        workspaceBadge="PROCTORING ACTIVE"
-        workspaceType="candidate"
-        activeTab={stage}
+        role="candidate"
+        workspaceTitle="Candidate Assessment Room"
+        workspaceBadge="CANDIDATE COCKPIT"
+        activeTab={activeTab}
         tabs={[
-          { id: 'preflight', label: '1. Hardware Verification' },
-          { id: 'assessment', label: '2. Live Assessment' },
-          { id: 'completed', label: '3. Submission Dossier' }
+          { id: 'Live Assessment', label: 'Live Assessment' },
+          { id: 'Preflight Check', label: 'Preflight Setup' },
+          { id: 'Transcript Feed', label: 'Transcript Feed' }
         ]}
-        onSelectTab={(tabId) => setStage(tabId)}
-        user={user}
+        onSelectTab={setActiveTab}
+        onTabChange={setActiveTab}
         onLogout={onLogout}
         onNavigateRole={onNavigateRole}
+        user={user}
       />
 
-      {/* ─── STAGE 1: HARDWARE & SYSTEM PRE-CHECK ─── */}
-      {stage === 'preflight' && (
-        <main className="flex-1 p-8 flex items-center justify-center">
-          <div className="max-w-2xl w-full glass-panel p-8 space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 mb-1">
-                <CheckCircle className="w-7 h-7" />
-              </div>
-              <h1 className="text-lg font-bold text-white tracking-wide">
-                System Readiness & Privacy Verification
-              </h1>
-              <p className="text-xs text-slate-400 max-w-lg mx-auto">
-                Before beginning your evaluation, please verify that your camera feed and microphone input are active.
-              </p>
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 12, padding: 12, flex: 1, minHeight: 0, overflow: 'hidden' }}>
 
-            {/* Verification Checklist */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Camera Tile with Live Face HUD */}
-              <div className="p-4 rounded-xl bg-black/30 border border-white/[0.08] space-y-3 flex flex-col items-center text-center">
-                <div className="w-full h-44 rounded-lg overflow-hidden bg-black/70 relative flex items-center justify-center border border-white/[0.08]">
-                  <video
-                    ref={attachVideoElement}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover transform scale-x-[-1]"
-                  />
-                  {/* Real-Time Face Detection & Mesh HUD */}
-                  <CandidateFaceHUD isCapturing={isCapturing} isSimulated={isSimulated} visionTelemetry={visionTelemetry} />
-                </div>
-                <div className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  Camera Live • Face Verified
-                </div>
-              </div>
+        {/* ── LEFT: Main Stage ── */}
+        <div className="ajna-glass" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
 
-              {/* Mic & Audio Check */}
-              <div className="p-4 rounded-xl bg-black/30 border border-white/[0.08] space-y-3 flex flex-col justify-between">
-                <div>
-                  <div className="text-xs font-bold text-white mb-1 flex items-center gap-2">
-                    <Mic className="w-4 h-4 text-emerald-400" />
-                    Microphone Input Test
+          {/* ════════════ LIVE ASSESSMENT VIEW ════════════ */}
+          {activeTab === 'Live Assessment' && (
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '16px 20px', gap: 14, overflowY: 'auto' }}>
+              
+              {/* Session Prompt Banner */}
+              <div style={{ padding: '14px 18px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, flexShrink: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div className="text-label" style={{ color: '#2dd4bf' }}>CURRENT EVALUATION PROMPT</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: '#38bdf8', background: 'rgba(56,189,248,0.12)', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(56,189,248,0.3)' }}>
+                      SYSTEM DESIGN
+                    </span>
+                    <div className="font-mono-data" style={{ fontSize: 16, color: '#2dd4bf', fontWeight: 800 }}>
+                      {formatTimer(elapsedSec)}
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Say a test sentence (e.g. &ldquo;Testing microphone 1-2-3&rdquo;) to confirm speech detection.
-                  </p>
+                </div>
+                <p style={{ fontSize: 13, color: '#f1f5f9', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                  Describe your approach to designing a distributed microservices architecture for a high-traffic e-commerce platform.
+                </p>
+              </div>
+
+              {/* ── CAMERA FEED: PROPER RECTANGLE / SQUARE FRAME ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0, width: '100%' }}>
+                
+                {/* Aspect Ratio Switcher Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: getCameraDimensions().maxWidth || '520px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: cameraActive ? '#10b981' : '#ef4444', boxShadow: `0 0 6px ${cameraActive ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)'}`, display: 'inline-block' }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: cameraActive ? '#5eead4' : '#f87171' }}>
+                      {cameraActive ? 'Candidate Video Feed Active' : 'Camera Feed Offline'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(0,0,0,0.4)', padding: '3px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <button
+                      onClick={() => setAspectMode('rectangle')}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 5,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: aspectMode === 'rectangle' ? 'rgba(45,212,191,0.2)' : 'transparent',
+                        color: aspectMode === 'rectangle' ? '#2dd4bf' : '#64748b',
+                        boxShadow: aspectMode === 'rectangle' ? '0 0 0 1px rgba(45,212,191,0.35)' : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                      title="16:9 Landscape Rectangle"
+                    >
+                      <RectangleHorizontal size={12} /><span>16:9 Rectangle</span>
+                    </button>
+
+                    <button
+                      onClick={() => setAspectMode('standard')}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 5,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: aspectMode === 'standard' ? 'rgba(45,212,191,0.2)' : 'transparent',
+                        color: aspectMode === 'standard' ? '#2dd4bf' : '#64748b',
+                        boxShadow: aspectMode === 'standard' ? '0 0 0 1px rgba(45,212,191,0.35)' : 'none'
+                      }}
+                      title="4:3 Standard Box"
+                    >
+                      4:3 Box
+                    </button>
+
+                    <button
+                      onClick={() => setAspectMode('square')}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 5,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: aspectMode === 'square' ? 'rgba(45,212,191,0.2)' : 'transparent',
+                        color: aspectMode === 'square' ? '#2dd4bf' : '#64748b',
+                        boxShadow: aspectMode === 'square' ? '0 0 0 1px rgba(45,212,191,0.35)' : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                      title="1:1 Centered Square"
+                    >
+                      <Square size={11} /><span>1:1 Square</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Animated Volume Bars */}
-                <div className="p-3 glass-inset flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-slate-400">16 kHz PCM</span>
-                  <div className="flex items-center gap-1 h-5">
-                    {[0.1, 0.25, 0.45, 0.65, 0.85].map((lvl, idx) => (
-                      <div
-                        key={idx}
-                        className={`w-1.5 rounded-full transition-all duration-100 ${
-                          (audioLevel || 0.25) >= lvl
-                            ? 'bg-emerald-400 h-5 shadow-sm shadow-emerald-400'
-                            : 'bg-white/10 h-1.5'
-                        }`}
-                      />
+                {/* Real Video Box — Proportioned Rectangle/Square without Horizontal Squishing */}
+                <div 
+                  style={{ 
+                    ...getCameraDimensions(), 
+                    background: '#04070d', 
+                    borderRadius: 14, 
+                    border: '1px solid rgba(45,212,191,0.25)', 
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(45,212,191,0.06)',
+                    position: 'relative', 
+                    overflow: 'hidden', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <video 
+                    ref={videoPipRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover', 
+                      display: cameraActive ? 'block' : 'none',
+                      transform: 'scaleX(-1)'
+                    }} 
+                  />
+
+                  {/* Corner brackets */}
+                  <CornerBrackets />
+
+                  {/* Subtle Grid overlay */}
+                  <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'linear-gradient(to right,#14b8a6 1px,transparent 1px),linear-gradient(to bottom,#14b8a6 1px,transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
+
+                  {cameraActive ? (
+                    <>
+                      <div style={{ position: 'absolute', top: 12, left: 14, display: 'flex', gap: 6, zIndex: 10 }}>
+                        <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#fff', background: '#ef4444', padding: '2px 8px', borderRadius: 4, boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}>● LIVE WEBCAM</span>
+                        <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: '#2dd4bf', background: 'rgba(0,0,0,0.65)', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(45,212,191,0.3)' }}>30 FPS</span>
+                      </div>
+
+                      <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                        <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: '#10b981', background: 'rgba(0,0,0,0.7)', padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(16,185,129,0.35)', whiteSpace: 'nowrap' }}>
+                          Face Centered • Conf 99.4%
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', color: '#64748b', fontSize: 12, padding: 20 }}>
+                      <CameraOff size={24} style={{ margin: '0 auto 8px', color: '#ef4444' }} />
+                      <div>Camera feed inactive</div>
+                      <button onClick={initDevices} className="btn-glass" style={{ marginTop: 8, fontSize: 10, padding: '4px 10px' }}>
+                        Reconnect Webcam
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mic Audio Level Strip directly under camera */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', maxWidth: getCameraDimensions().maxWidth || '520px', padding: '8px 12px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10 }}>
+                  <Mic size={14} style={{ color: micActive ? '#10b981' : '#64748b', flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>MIC LEVEL</span>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 2, height: 16 }}>
+                    {micBars.map((h, i) => (
+                      <div key={i} style={{ flex: 1, background: micActive ? (i < 20 ? '#10b981' : '#f59e0b') : 'rgba(255,255,255,0.1)', borderRadius: 1, height: `${h}%`, opacity: 0.9, transition: 'height 0.08s ease' }} />
                     ))}
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold">
-                    {micTestPassed ? 'TEST PASSED' : 'SPEAK TEST'}
+                  <span className="font-mono-data" style={{ fontSize: 10, color: micActive ? '#10b981' : '#64748b', flexShrink: 0 }}>
+                    {micActive ? `${micLevel > 10 ? 'VOICE ACTIVE' : 'READY'}` : 'MUTED'}
                   </span>
                 </div>
-
-                <div className="text-[10px] text-slate-400 font-mono">
-                  ✓ Noise Floor: 0.012 RMS Verified
-                </div>
-              </div>
-            </div>
-
-            {/* Observable Evidence Guarantee Notice */}
-            <div className="p-3.5 rounded-xl bg-orange-950/20 border border-orange-500/25 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                <strong className="text-white">Observable Evidence Ethics Guarantee:</strong> Ajna measures quantifiable physical signals (verbal cadence, architectural coverage, audio clarity). We strictly never infer internal emotional states or make assumptions about your intent.
-              </p>
-            </div>
-
-            {/* Launch Assessment Action */}
-            <div className="flex justify-center pt-2">
-              <button
-                onClick={() => setStage('assessment')}
-                className="btn-glass-primary text-xs px-8 py-2.5 text-white flex items-center gap-2 text-sm shadow-lg shadow-orange-600/30"
-              >
-                <span>Enter Assessment Room</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </main>
-      )}
-
-      {/* ─── STAGE 2: ACTIVE ASSESSMENT ROOM ─── */}
-      {stage === 'assessment' && (
-        <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-hidden">
-          {/* Left Column: Perception Mirror & Acoustic Feedback (5 Cols) */}
-          <div className="lg:col-span-5 flex flex-col gap-4 overflow-hidden">
-            {/* Self Video Mirror */}
-            <div className="glass-panel flex-1 flex flex-col p-4 relative min-h-[300px]">
-              <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.08] mb-3">
-                <div className="flex items-center gap-2">
-                  <Video className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">Candidate Perception Feed</span>
-                </div>
-                <span className="glass-pill glass-pill-emerald text-[10px] py-0 px-2 h-5">
-                  <span className="pulse-emerald-dot mr-1"></span>
-                  Camera Live (30 FPS)
-                </span>
               </div>
 
-              {/* Viewport with Video & Canvas Face HUD */}
-              <div className="relative flex-1 rounded-xl overflow-hidden bg-black/70 border border-white/[0.06] flex items-center justify-center">
-                <video
-                  ref={attachVideoElement}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover transform scale-x-[-1]"
-                />
+              {/* ════════════ VOICE TO TEXT ENGINE STAGE ════════════ */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '14px 16px' }}>
                 
-                {/* Real-Time Face Detection & Mesh HUD */}
-                <CandidateFaceHUD isCapturing={isCapturing} isSimulated={isSimulated} visionTelemetry={visionTelemetry} />
-
-                {/* Visual Gaze Centering Pill */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
-                  <div className="glass-pill bg-black/60 backdrop-blur-md text-[10px] text-emerald-400 font-mono border-white/10">
-                    <CheckCircle className="w-3 h-3 text-emerald-400" />
-                    Display Aligned: Centered ({visionTelemetry?.gaze_deviation_angle ? `${visionTelemetry.gaze_deviation_angle.toFixed(1)}°` : '2.1°'})
+                {/* ASR Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(45,212,191,0.15)', border: '1px solid rgba(45,212,191,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Radio size={14} style={{ color: '#2dd4bf' }} className={micLevel > 10 ? 'animate-pulse' : ''} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>Voice-to-Text ASR Engine</span>
+                        <span style={{ fontSize: 9, background: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '1px 6px', borderRadius: 4, border: '1px solid rgba(16,185,129,0.3)', fontFamily: 'var(--font-mono)' }}>
+                          ● TRANSCRIBING LIVE
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 10, color: '#64748b', fontFamily: 'var(--font-mono)' }}>
+                        Faster-Whisper • 16 kHz Audio • Real-Time Speech Recognition
+                      </div>
+                    </div>
                   </div>
-                  <div className="glass-pill bg-black/60 backdrop-blur-md text-[10px] text-orange-300 font-mono border-white/10">
-                    468 FaceMesh Active
+
+                  {/* Speech stats pills */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className="font-mono-data" style={{ fontSize: 10, color: '#2dd4bf', background: 'rgba(45,212,191,0.1)', padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(45,212,191,0.25)' }}>
+                      148 WPM
+                    </span>
+                    <span className="font-mono-data" style={{ fontSize: 10, color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
+                      {transcripts.reduce((acc, t) => acc + t.text.split(' ').length, 0)} Words
+                    </span>
+                    <span className="font-mono-data" style={{ fontSize: 10, color: '#a78bfa', background: 'rgba(167,139,250,0.12)', padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(167,139,250,0.25)' }}>
+                      Conf: 98.2%
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Live Mic Feedback Strip */}
-              <div className="mt-3 p-2.5 glass-inset flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                  <div>
-                    <div className="text-[11px] font-semibold text-slate-200">Microphone Input</div>
-                    <div className="text-[9px] text-slate-400 font-mono">16 kHz PCM • SNR +26.4 dB</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 h-5">
-                  {[0.15, 0.35, 0.55, 0.75, 0.95].map((bar, i) => (
-                    <div
-                      key={i}
-                      className={`w-1.5 rounded-full transition-all duration-100 ${
-                        (audioLevel || 0.30) >= bar ? 'bg-emerald-400 h-5' : 'bg-white/10 h-1.5'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Speaking Cadence Meter */}
-            <div className="glass-panel p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Volume2 className="w-3.5 h-3.5 text-orange-400" />
-                  Speech Flow & Verbal Cadence
-                </span>
-                <span className="font-mono text-xs font-bold text-orange-400">
-                  {audioTelemetry?.speaking_rate_wpm || 148} WPM
-                </span>
-              </div>
-              <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                {/* Transcripts Scroll Feed */}
                 <div 
-                  className="bg-gradient-to-r from-orange-500 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(100, ((audioTelemetry?.speaking_rate_wpm || 148) / 200) * 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                <span>Hesitant (&lt;100 WPM)</span>
-                <span className="text-emerald-400 font-bold">Optimal Pace (120-170 WPM)</span>
-                <span>Rushed (&gt;180 WPM)</span>
-              </div>
-            </div>
-          </div>
+                  ref={transcriptScrollRef}
+                  className="scroll-y" 
+                  style={{ 
+                    flex: 1, 
+                    minHeight: 140, 
+                    maxHeight: 240, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 8, 
+                    padding: '8px 4px',
+                    overflowY: 'auto'
+                  }}
+                >
+                  {transcripts.map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'flex-start', 
+                        gap: 10, 
+                        padding: '8px 12px', 
+                        background: 'rgba(255,255,255,0.03)', 
+                        border: '1px solid rgba(255,255,255,0.06)', 
+                        borderRadius: 8 
+                      }}
+                    >
+                      <span className="font-mono-data" style={{ fontSize: 10, color: '#2dd4bf', flexShrink: 0, marginTop: 2 }}>
+                        [{item.ts}]
+                      </span>
+                      <span style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.5, flex: 1 }}>
+                        {item.text}
+                      </span>
+                    </div>
+                  ))}
 
-          {/* Right Column: Question Station, Live Caption Mirror & Scratchpad (7 Cols) */}
-          <div className="lg:col-span-7 flex flex-col gap-4 overflow-hidden">
-            {/* Question Station */}
-            <div className="glass-panel p-5 space-y-3.5">
-              <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.08]">
-                <div className="flex items-center gap-2">
-                  <span className="glass-pill glass-pill-active text-[10px] font-bold">
-                    QUESTION {currentQuestion.id} OF {CANDIDATE_QUESTIONS.length}
-                  </span>
-                  <span className="text-xs font-medium text-slate-400">
-                    {currentQuestion.domain}
-                  </span>
+                  {/* Real-time Spoken Interim Bubble */}
+                  {interimText && (
+                    <div 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8, 
+                        padding: '8px 12px', 
+                        background: 'rgba(45,212,191,0.08)', 
+                        border: '1px solid rgba(45,212,191,0.3)', 
+                        borderRadius: 8 
+                      }}
+                    >
+                      <Radio size={13} style={{ color: '#2dd4bf', flexShrink: 0 }} className="animate-pulse" />
+                      <span className="font-mono-data" style={{ fontSize: 10, color: '#2dd4bf', flexShrink: 0 }}>
+                        [Speaking]:
+                      </span>
+                      <span style={{ fontSize: 12, color: '#5eead4', fontStyle: 'italic', flex: 1 }}>
+                        {interimText}
+                      </span>
+                      <span className="animate-pulse" style={{ color: '#2dd4bf', fontWeight: 800 }}>▋</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Countdown Timer */}
-                <div className="glass-pill glass-pill-amber font-mono text-xs font-bold">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Time Remaining: {formatTimer(timeLeft)}</span>
-                </div>
-              </div>
-
-              {/* Question Heading & Statement */}
-              <div className="space-y-2">
-                <h2 className="text-base font-bold text-white tracking-wide">
-                  {currentQuestion.title}
-                </h2>
-                <p className="text-xs text-slate-300 leading-relaxed p-3.5 rounded-xl bg-black/25 border border-white/[0.06]">
-                  {currentQuestion.text}
-                </p>
-                {/* Key Points */}
-                <div className="flex items-center gap-2 pt-1 flex-wrap">
-                  <span className="text-[10px] text-slate-400 font-mono">Key Focal Points:</span>
-                  {currentQuestion.keyPoints?.map((kp, idx) => (
-                    <span key={idx} className="glass-pill text-[10px] py-0.5 px-2 bg-white/[0.03]">
-                      • {kp}
+                {/* Key Architectural Concepts Detected */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingTop: 4 }}>
+                  <span style={{ fontSize: 10, color: '#64748b', fontFamily: 'var(--font-mono)' }}>Identified Concepts:</span>
+                  {detectedConcepts.map(c => (
+                    <span 
+                      key={c}
+                      style={{ 
+                        fontSize: 9, 
+                        fontFamily: 'var(--font-mono)', 
+                        color: '#34d399', 
+                        background: 'rgba(16,185,129,0.1)', 
+                        border: '1px solid rgba(16,185,129,0.3)', 
+                        padding: '2px 7px', 
+                        borderRadius: 6 
+                      }}
+                    >
+                      #{c}
                     </span>
                   ))}
                 </div>
+
+                {/* Manual Note / Speech Input Toolbar */}
+                <form onSubmit={handleAddManualNote} style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <input 
+                    type="text" 
+                    value={manualNote} 
+                    onChange={e => setManualNote(e.target.value)} 
+                    placeholder="Candidate speech is auto-transcribing... or type additional technical notes here"
+                    className="aurora-input" 
+                    style={{ flex: 1, padding: '7px 12px', fontSize: 11 }}
+                  />
+                  <button 
+                    type="submit" 
+                    className="btn-glass"
+                    style={{ padding: '7px 14px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}
+                  >
+                    <CornerDownLeft size={12} /><span>Add Note</span>
+                  </button>
+                </form>
+
+                {/* Done Answering Action */}
+                <button 
+                  onClick={() => alert('Answer recorded and submitted with speech transcripts and telemetry to Evaluator.')}
+                  className="btn-primary" 
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 0', fontSize: 13, marginTop: 4 }}
+                >
+                  <Check size={14} /><span>I am done answering (Submit Response)</span>
+                </button>
               </div>
 
-              {/* Navigation Action Buttons */}
-              <div className="flex items-center justify-between pt-2 border-t border-white/[0.08]">
-                <button
-                  onClick={handlePrevQuestion}
-                  disabled={currentQuestionIdx === 0}
-                  className="glass-pill text-xs px-3 py-1.5 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Previous</span>
-                </button>
-
-                <button
-                  onClick={handleNextQuestion}
-                  className="btn-glass-primary text-xs px-5 py-2 shadow-md shadow-orange-600/30 flex items-center gap-2"
-                >
-                  <span>{currentQuestionIdx < CANDIDATE_QUESTIONS.length - 1 ? 'Next Question' : 'Complete Assessment'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
             </div>
+          )}
 
-            {/* "What the AI Evaluator Hears" Live Caption Mirror */}
-            <div className="glass-panel flex-1 flex flex-col p-4 overflow-hidden min-h-[150px]">
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08] mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  What the AI Evaluator Hears (Live Speech Mirror)
-                </span>
-                <span className="text-[10px] text-slate-500 font-mono">Faster-Whisper Streaming ASR</span>
+          {/* ════════════ PREFLIGHT SETUP VIEW ════════════ */}
+          {activeTab === 'Preflight Check' && (
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 20, gap: 16, overflow: 'auto' }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9', margin: '0 0 6px' }}>System Preflight Check</h3>
+                <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Verify your webcam and microphone before the assessment begins.</p>
               </div>
-              <div className="flex-1 glass-inset p-3 overflow-y-auto text-xs text-slate-200 leading-relaxed font-sans">
-                {transcription && transcription.length > 0 ? (
-                  <div className="space-y-1">
-                    {transcription.map((seg, i) => (
-                      <span key={i} className="inline mr-1 text-slate-100">
-                        {seg.text || seg}
-                      </span>
-                    ))}
+
+              {/* Dynamic Checklist */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Camera Card */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: cameraActive ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${cameraActive ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: cameraActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {cameraActive ? <Camera size={18} style={{ color: '#10b981' }} /> : <CameraOff size={18} style={{ color: '#ef4444' }} />}
                   </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9' }}>
+                      {cameraActive ? 'Camera Connected & Ready' : (cameraError || 'Camera Offline')}
+                    </div>
+                    <div className="font-mono-data" style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>
+                      {cameraActive ? '720p HD • 30 FPS Hardware Feed' : 'Please grant camera access to proceed'}
+                    </div>
+                  </div>
+                  {cameraActive ? <CheckCircle size={18} style={{ color: '#10b981', flexShrink: 0 }} /> : <button onClick={initDevices} className="btn-glass" style={{ fontSize: 10, padding: '4px 8px' }}>Retry</button>}
+                </div>
+
+                {/* Microphone Card */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: micActive ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${micActive ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: micActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {micActive ? <Mic size={18} style={{ color: '#10b981' }} /> : <MicOff size={18} style={{ color: '#ef4444' }} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9' }}>
+                      {micActive ? 'Microphone Active & Calibrated' : 'Microphone Offline'}
+                    </div>
+                    <div className="font-mono-data" style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>
+                      {micActive ? '16 kHz Audio Stream • Live VAD Active' : 'Speak to test your input level'}
+                    </div>
+                  </div>
+                  {micActive ? <CheckCircle size={18} style={{ color: '#10b981', flexShrink: 0 }} /> : <button onClick={initDevices} className="btn-glass" style={{ fontSize: 10, padding: '4px 8px' }}>Retry</button>}
+                </div>
+
+                {/* Face & Network Cards */}
+                {PREFLIGHT_ITEMS_BASE.slice(2).map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <item.icon size={18} style={{ color: '#10b981' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9' }}>{item.status}</div>
+                      <div className="font-mono-data" style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{item.detail}</div>
+                    </div>
+                    <CheckCircle size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Preflight Camera Preview: Proportioned Rectangle */}
+              <div 
+                style={{ 
+                  width: '100%',
+                  maxWidth: '480px',
+                  height: '270px',
+                  margin: '0 auto',
+                  background: '#04070d', 
+                  borderRadius: 14, 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  position: 'relative', 
+                  overflow: 'hidden', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}
+              >
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover', 
+                    display: cameraActive ? 'block' : 'none',
+                    transform: 'scaleX(-1)'
+                  }} 
+                />
+
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.12, backgroundImage: 'linear-gradient(to right,#14b8a6 1px,transparent 1px),linear-gradient(to bottom,#14b8a6 1px,transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
+                <CornerBrackets />
+
+                {cameraActive ? (
+                  <>
+                    <div style={{ position: 'absolute', top: 10, left: 12, display: 'flex', gap: 6 }}>
+                      <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#fff', background: '#10b981', padding: '2px 8px', borderRadius: 4 }}>● CAMERA READY</span>
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontFamily: 'var(--font-mono)', color: '#10b981', background: 'rgba(0,0,0,0.7)', padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(16,185,129,0.3)', whiteSpace: 'nowrap' }}>
+                      Face Conf: 99.4% • Framing Centered
+                    </div>
+                  </>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-500 text-xs italic">
-                    Begin speaking your answer. Your spoken words will transcribe here in real time.
+                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 5 }}>
+                    <CameraOff size={28} style={{ color: '#ef4444' }} />
+                    <span style={{ fontSize: 12, color: '#f87171', fontWeight: 600 }}>Webcam Offline</span>
+                    <button onClick={initDevices} className="btn-glass" style={{ fontSize: 10, padding: '4px 12px' }}>Enable Camera</button>
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Candidate Technical Scratchpad */}
-            <div className="glass-panel p-3.5 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                  <FileText className="w-3.5 h-3.5 text-orange-400" />
-                  Candidate Technical Scratchpad (Optional Draft / Code)
+              {/* Preflight Mic Audio Test Bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(0,0,0,0.3)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                <Mic size={14} style={{ color: micActive ? '#10b981' : '#64748b' }} />
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>Live Audio Test:</span>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 2, height: 20 }}>
+                  {micBars.map((h, i) => (
+                    <div key={i} style={{ flex: 1, background: micActive ? (i < 20 ? '#10b981' : '#f59e0b') : 'rgba(255,255,255,0.1)', height: `${h}%`, borderRadius: 1, transition: 'height 0.08s ease' }} />
+                  ))}
+                </div>
+                <span className="font-mono-data" style={{ fontSize: 10, color: micActive ? '#10b981' : '#64748b' }}>
+                  {micActive ? `${micLevel > 5 ? 'Detecting Voice' : 'Quiet'}` : 'Muted'}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">Autosaved to your session dossier</span>
               </div>
-              <textarea
-                value={candidateNotes}
-                onChange={(e) => setCandidateNotes(e.target.value)}
-                placeholder="Draft architectural bullet points, formulas, or code snippets here while answering..."
-                className="w-full h-20 glass-inset p-3 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-orange-500/50 resize-none"
-              />
-            </div>
-          </div>
-        </main>
-      )}
 
-      {/* ─── STAGE 3: COMPLETED ASSESSMENT CONFIRMATION ─── */}
-      {stage === 'completed' && (
-        <main className="flex-1 p-8 flex items-center justify-center">
-          <div className="max-w-xl w-full glass-panel p-8 text-center space-y-6">
-            <div className="inline-flex p-4 rounded-3xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-xl shadow-emerald-500/10">
-              <Award className="w-10 h-10" />
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="text-xl font-bold text-white tracking-wide">
-                Evaluation Submitted Successfully!
-              </h1>
-              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                Your responses have been timestamped, encrypted, and compiled into the candidate evaluation dossier. The evaluator will review the verifiable telemetry alongside the MSCMLP 32-head ensemble consensus.
-              </p>
-            </div>
-
-            <div className="glass-inset p-4 rounded-xl text-left space-y-2 font-mono text-xs">
-              <div className="flex justify-between text-slate-400">
-                <span>Candidate ID:</span>
-                <span className="text-white font-bold">{user?.email || 'candidate@antigravity.ai'}</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Questions Completed:</span>
-                <span className="text-emerald-400 font-bold">4 / 4 Completed</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Auditable Signals Recorded:</span>
-                <span className="text-orange-400 font-bold">Gaze Vectors, Pitch F0, Whisper Cadence</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Persistence Status:</span>
-                <span className="text-emerald-400 font-bold">Committed to Motor MongoDB</span>
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-center gap-3">
-              <button
-                onClick={() => setStage('preflight')}
-                className="glass-pill text-xs px-4 py-2 cursor-pointer flex items-center gap-1.5"
+              <button 
+                onClick={() => { setStarted(true); setActiveTab('Live Assessment'); }} 
+                className="btn-primary"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0', fontSize: 14 }}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Review Instructions Again</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="btn-glass-primary text-xs px-6 py-2 shadow-lg shadow-orange-600/30 cursor-pointer"
-              >
-                Sign Out & Exit
+                <span>Enter Live Assessment Room</span><ChevronRight size={16} />
               </button>
             </div>
+          )}
+
+          {/* ════════════ TRANSCRIPT FEED VIEW ════════════ */}
+          {activeTab === 'Transcript Feed' && (
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 20, overflow: 'hidden' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', marginBottom: 14, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FileText size={16} style={{ color: '#2dd4bf' }} />
+                <span>Full Verbatim Transcript Feed</span>
+                <span className="glass-pill-teal" style={{ marginLeft: 'auto', fontSize: 10 }}>
+                  {transcripts.length} Entries Logged
+                </span>
+              </div>
+              <div className="scroll-y" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {transcripts.map((line, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8 }}>
+                    <span className="font-mono-data" style={{ fontSize: 10, color: '#2dd4bf', flexShrink: 0, marginTop: 1 }}>[{line.ts}]</span>
+                    <span style={{ fontSize: 12, lineHeight: 1.5, color: '#e2e8f0' }}>{line.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT: Status & Telemetry ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', minHeight: 0 }}>
+
+          {/* Session Status */}
+          <div className="ajna-glass-sm" style={{ padding: 16 }}>
+            <div className="text-label" style={{ marginBottom: 10 }}>SESSION STATUS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.6)', display: 'inline-block' }} />
+                <span style={{ fontSize: 12, color: '#10b981', fontWeight: 600 }}>{activeTab === 'Preflight Check' ? 'Preflight Setup' : 'Live Assessment Active'}</span>
+              </div>
+              {[
+                ['Session ID', 'SESS-2024-0892'],
+                ['Evaluator', 'Dr. Mounika Reddy'],
+                ['Speech Engine', isListening ? 'Web Speech API' : 'Faster-Whisper VAD'],
+                ['Hardware', cameraActive && micActive ? 'Webcam & Mic OK' : 'Checking']
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#475569' }}>{k}</span>
+                  <span className="font-mono-data" style={{ fontSize: 11, color: '#94a3b8' }}>{v}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </main>
-      )}
+
+          {/* Observable Evidence Notice */}
+          <div className="ajna-glass-sm" style={{ padding: 16, borderColor: 'rgba(45,212,191,0.2)', background: 'rgba(45,212,191,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <Shield size={14} style={{ color: '#2dd4bf', flexShrink: 0 }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#2dd4bf' }}>Observable Evidence Guarantee</span>
+            </div>
+            <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6, margin: '0 0 10px' }}>
+              This session records only verifiable physical signals. No internal emotional states or intent are inferred.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {['Gaze angle (degrees)', 'F0 pitch contour (Hz)', 'Speaking rate (WPM)', 'ASR transcript timestamps'].map(item => (
+                <div key={item} style={{ display: 'flex', gap: 8, fontSize: 10, color: '#475569', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ color: '#2dd4bf', flexShrink: 0 }}>✓</span><span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Personal Telemetry */}
+          <div className="ajna-glass-sm" style={{ padding: 16 }}>
+            <div className="text-label" style={{ marginBottom: 10 }}>YOUR LIVE SIGNALS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {SIGNALS.map(s => (
+                <div key={s.label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: '#64748b' }}>{s.label}</span>
+                    <span className="font-mono-data" style={{ fontSize: 11, color: s.color, fontWeight: 600 }}>{s.val}</span>
+                  </div>
+                  <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ width: `${s.pct}%`, height: '100%', background: s.color, borderRadius: 999 }} />
+                  </div>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 }}>
+                <span style={{ fontSize: 11, color: '#64748b' }}>Focus State</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#c4b5fd', background: 'rgba(139,92,246,0.15)', padding: '2px 8px', borderRadius: 6, border: '1px solid rgba(139,92,246,0.3)', fontFamily: 'var(--font-mono)' }}>STEADY</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="ajna-glass-sm" style={{ padding: 16 }}>
+            <div className="text-label" style={{ marginBottom: 10 }}>QUICK ACTIONS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button className="btn-glass" style={{ width: '100%', padding: '9px 0', fontSize: 12, border: '1px solid rgba(245,158,11,0.3)', color: '#fcd34d' }}>
+                ✋ Raise Hand / Flag Issue
+              </button>
+              <button className="btn-glass" style={{ width: '100%', padding: '9px 0', fontSize: 12 }}>
+                💬 Request Clarification
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -397,31 +397,73 @@ html, body {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* === COCKPIT GRID LAYOUT === */
-.cockpit-shell {
-  display: grid;
+/* === APP SHELL LAYOUT === */
+.app-root {
   width: 100%;
   height: 100%;
-  padding: 12px;
-  gap: 12px;
-  grid-template-columns: 320px 1fr 320px;
-  grid-template-rows: 60px 1fr 140px;
-  grid-template-areas:
-    "command   command    command"
-    "audio     perception state"
-    "transcript timeline   evidence";
-  background: transparent;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.content-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+/* Auth portal — full area, centered */
+.auth-portal-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   overflow: hidden;
 }
 
-.zone-command    { grid-area: command; }
-.zone-audio      { grid-area: audio; min-height: 0; }
-.zone-perception { grid-area: perception; min-height: 0; }
-.zone-state      { grid-area: state; min-height: 0; }
-.zone-transcript { grid-area: transcript; min-height: 0; }
-.zone-timeline   { grid-area: timeline; min-height: 0; }
-.zone-evidence   { grid-area: evidence; min-height: 0; }
+/* === COCKPIT SHELL — flex column, NOT grid === */
+.cockpit-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+.cockpit-header {
+  height: 60px;
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+.cockpit-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+/* Layout variants */
+.cockpit-body-evaluator { grid-template-columns: 300px 1fr 300px; }
+.cockpit-body-candidate { grid-template-columns: 1fr 320px; }
+.cockpit-body-admin     { grid-template-columns: 1fr 360px; }
+
+/* (zone classes removed — using flex cockpit-shell now) */
+
+/* === LINE CLAMP UTILITIES === */
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.line-clamp-4 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
 
 /* === TRUE BUBBLE-TRANSPARENT GLASS CARDS (.ajna-glass) === */
 .ajna-glass {
@@ -1021,3 +1063,88 @@ button, a, input, select, textarea, [role="button"], .window-no-drag, .glass-pil
   50% { transform: translate(-20px, -15px) scale(1.06); }
   100% { transform: translate(20px, 15px) scale(0.95); }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   AJNA GLASS COMPACT & SPECIALIZED SURFACES
+   ───────────────────────────────────────────────────────────── */
+.ajna-glass-sm {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 100%);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.ajna-glass-sm:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(45, 212, 191, 0.4);
+}
+
+/* Showcase layout helpers */
+.showcase-page {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+.showcase-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.showcase-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 0 32px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(7, 9, 14, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.hero-h1 {
+  font-size: clamp(2.2rem, 3.4vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  max-width: 520px;
+  margin: 0;
+  color: #f1f5f9;
+}
+
+/* Engine cards grid */
+.engines-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.engine-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  transition: all 0.2s ease-in-out;
+}
+
+.engine-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(45, 212, 191, 0.3);
+  transform: translateY(-2px);
+}
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+

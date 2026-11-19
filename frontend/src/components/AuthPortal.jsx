@@ -1,276 +1,229 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight, Eye, EyeOff, ArrowLeft, Users, Shield, Activity
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Eye, EyeOff, ArrowLeft, ArrowRight, LogIn, UserPlus } from 'lucide-react';
 import useAuthStore from '../stores/authStore';
 
+const DEMO_PROFILES = [
+  { label: 'Dr. Mounika Reddy', role: 'evaluator', email: 'evaluator@ajna.ai', password: 'password123', color: '#f97316', initials: 'DM' },
+  { label: 'Sri Ram Kumar', role: 'candidate', email: 'candidate@ajna.ai', password: 'password123', color: '#2dd4bf', initials: 'SR' },
+  { label: 'Platform Admin', role: 'admin', email: 'admin@ajna.ai', password: 'password123', color: '#8b5cf6', initials: 'PA' },
+];
+
 export default function AuthPortal({ onLoginSuccess, onBack }) {
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const { login, register } = useAuthStore();
+  const [tab, setTab] = useState('signin');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  // Sign-in fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [selectedRole, setSelectedRole] = useState('evaluator');
-  const [showPassword, setShowPassword] = useState(false);
+  // Register fields
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPw, setRegPw] = useState('');
+  const [regRole, setRegRole] = useState('evaluator');
 
-  const { login, register, isLoading, error, clearError } = useAuthStore();
+  const handleDemoProfile = (p) => {
+    onLoginSuccess(p.role);
+  };
 
-  const handleSubmit = async (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    clearError();
+    setError('');
+    setLoading(true);
     try {
-      if (authMode === 'register') {
-        const u = await register(email, password, fullName, selectedRole);
-        if (onLoginSuccess) onLoginSuccess(u?.role || selectedRole);
-      } else {
-        const u = await login(email, password);
-        if (onLoginSuccess) onLoginSuccess(u?.role || 'evaluator');
-      }
+      const user = await login(email, password);
+      onLoginSuccess(user?.role || 'evaluator');
     } catch (err) {
-      // Error handled in store
+      setError(err?.message || 'Login failed. Check credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleQuickLogin = async (demoEmail, demoPassword, targetRole) => {
-    clearError();
-    setEmail(demoEmail);
-    setPassword(demoPassword);
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!regName.trim() || !regEmail.trim() || !regPw.trim()) { setError('All fields are required.'); return; }
+    setLoading(true);
     try {
-      const u = await login(demoEmail, demoPassword);
-      if (onLoginSuccess) onLoginSuccess(u?.role || targetRole);
+      const user = await register(regName, regEmail, regPw, regRole);
+      onLoginSuccess(user?.role || regRole);
     } catch (err) {
-      if (onLoginSuccess) onLoginSuccess(targetRole);
+      setError(err?.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div 
-      className="auth-portal-view w-full h-full flex flex-col items-center justify-center p-6 relative select-none overflow-y-auto"
-      style={{ WebkitAppRegion: 'no-drag' }}
+      className="auth-portal-view w-full h-full"
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        minHeight: '100%',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        position: 'relative', 
+        padding: '32px 16px',
+        overflowY: 'auto',
+        WebkitAppRegion: 'no-drag' 
+      }}
     >
-      {/* Top Left Navigation Back to Showcase */}
-      {onBack && (
-        <button
-          type="button"
-          onClick={onBack}
-          className="absolute top-6 left-6 sm:left-12 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] transition-all cursor-pointer z-30"
-          style={{ WebkitAppRegion: 'no-drag' }}
-        >
-          <ArrowLeft size={14} />
-          <span>Back to Ajna Showcase</span>
-        </button>
-      )}
+      {/* Back button */}
+      <button onClick={onBack} className="btn-glass"
+        style={{ position: 'absolute', top: 20, left: 24, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 14px', zIndex: 20, WebkitAppRegion: 'no-drag' }}>
+        <ArrowLeft size={13} /><span>Back to Overview</span>
+      </button>
 
-      {/* Centerpiece Floating Glassmorphic Auth Card */}
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="ajna-glass w-full max-w-[500px] p-8 sm:p-9 space-y-6 my-auto relative z-20 shadow-2xl"
-        style={{
-          border: '1px solid rgba(45, 212, 191, 0.3)',
-          boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.75), 0 0 36px rgba(45, 212, 191, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.28)',
-          WebkitAppRegion: 'no-drag'
-        }}
-      >
-        {/* Brand Emblem & Welcome Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-teal-400 via-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-teal-500/30 border border-white/30 mb-2">
-            <Sparkles className="w-6 h-6 text-white" />
+        initial={{ opacity: 0, y: 15, scale: 0.98 }} 
+        animate={{ opacity: 1, y: 0, scale: 1 }} 
+        transition={{ duration: 0.3 }}
+        className="ajna-glass shadow-2xl" 
+        style={{ 
+          width: 440, 
+          maxWidth: '92vw', 
+          padding: '32px 28px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 18, 
+          margin: 'auto',
+          position: 'relative',
+          zIndex: 10,
+          border: '1px solid rgba(255, 255, 255, 0.14)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(45, 212, 191, 0.08)'
+        }}>
+
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg,#2dd4bf,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(45,212,191,0.4)' }}>
+            <Sparkles style={{ width: 18, height: 18, color: 'white' }} />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            {authMode === 'login' ? 'Access your workspace' : 'Create your account'}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400">
-            {authMode === 'login' 
-              ? 'Select a 1-click verified enterprise profile or sign in with credentials.' 
-              : 'Join the verifiable multimodal evaluation network in under a minute.'}
-          </p>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.03em' }}>Ajna</div>
+            <div style={{ fontSize: 10, color: '#64748b', fontFamily: 'var(--font-mono)' }}>Observable Evidence Intelligence</div>
+          </div>
         </div>
 
-        {/* Clean Segmented Toggle Tabs */}
-        <div className="flex p-1 rounded-xl bg-black/40 border border-white/[0.08] backdrop-blur-md">
-          <button
-            type="button"
-            onClick={() => { setAuthMode('login'); clearError(); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              authMode === 'login'
-                ? 'bg-gradient-to-r from-teal-500/25 to-indigo-500/25 text-white border border-teal-400/40 shadow-md shadow-teal-500/10'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMode('register'); clearError(); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              authMode === 'register'
-                ? 'bg-gradient-to-r from-teal-500/25 to-indigo-500/25 text-white border border-teal-400/40 shadow-md shadow-teal-500/10'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Create Account
-          </button>
+        {/* Tab toggle */}
+        <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: 4 }}>
+          {[['signin','Sign In'],['register','Create Account']].map(([v, l]) => (
+            <button key={v} onClick={() => { setTab(v); setError(''); }}
+              style={{ flex: 1, padding: '7px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'all 0.2s', WebkitAppRegion: 'no-drag',
+                background: tab === v ? 'rgba(45,212,191,0.15)' : 'transparent',
+                color: tab === v ? '#2dd4bf' : '#64748b',
+                boxShadow: tab === v ? '0 0 0 1px rgba(45,212,191,0.35)' : 'none',
+              }}>{l}</button>
+          ))}
         </div>
 
-        {/* 1-Click Fast Enterprise Account Presets (Sign In Mode) */}
-        {authMode === 'login' && (
-          <div className="space-y-2 pt-1">
-            <div className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider flex items-center justify-between">
-              <span>1-CLICK VERIFIED PROFILES</span>
-              <span className="text-teal-400">INSTANT ACCESS</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('evaluator@antigravity.ai', 'EvalPass2026!', 'evaluator')}
-                className="p-3 rounded-xl bg-white/[0.04] hover:bg-teal-500/15 border border-white/[0.08] hover:border-teal-400/40 transition-all flex flex-col items-center text-center group cursor-pointer"
-              >
-                <Activity className="w-4 h-4 text-teal-400 mb-1" />
-                <span className="text-xs font-bold text-white group-hover:text-teal-300">Dr. Mounika</span>
-                <span className="text-[9px] text-teal-400 font-mono mt-0.5 font-bold">Evaluator</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('candidate@antigravity.ai', 'CandPass2026!', 'candidate')}
-                className="p-3 rounded-xl bg-white/[0.04] hover:bg-emerald-500/15 border border-white/[0.08] hover:border-emerald-400/40 transition-all flex flex-col items-center text-center group cursor-pointer"
-              >
-                <Users className="w-4 h-4 text-emerald-400 mb-1" />
-                <span className="text-xs font-bold text-white group-hover:text-emerald-300">Sri ram</span>
-                <span className="text-[9px] text-emerald-400 font-mono mt-0.5 font-bold">Candidate</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@antigravity.ai', 'AdminPass2026!', 'admin')}
-                className="p-3 rounded-xl bg-white/[0.04] hover:bg-amber-500/15 border border-white/[0.08] hover:border-amber-400/40 transition-all flex flex-col items-center text-center group cursor-pointer"
-              >
-                <Shield className="w-4 h-4 text-amber-400 mb-1" />
-                <span className="text-xs font-bold text-white group-hover:text-amber-300">Admin</span>
-                <span className="text-[9px] text-amber-400 font-mono mt-0.5 font-bold">Governance</span>
-              </button>
-            </div>
-
-            {/* Subtle Divider */}
-            <div className="relative flex items-center justify-center py-2">
-              <div className="w-full border-t border-white/[0.08]" />
-              <span className="absolute px-3 bg-[#0d131f] text-[9px] font-mono text-slate-500 uppercase tracking-widest">
-                OR SIGN IN WITH EMAIL
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Error Notification */}
-        {error && (
-          <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium">
-            {error}
-          </div>
-        )}
-
-        {/* Form Inputs */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {authMode === 'register' && (
-            <div className="relative">
-              <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500 pointer-events-none" />
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full Name (e.g. Dr. Mounika)"
-                className="aurora-input"
-              />
-            </div>
+        {/* Error */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 12, color: '#fca5a5' }}>
+              {error}
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          <div className="relative">
-            <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500 pointer-events-none" />
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="evaluator@antigravity.ai"
-              className="aurora-input"
-            />
-          </div>
-
-          <div className="relative">
-            <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500 pointer-events-none" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="aurora-input pr-16"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-3 text-xs text-slate-400 hover:text-teal-300 font-medium cursor-pointer"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-
-          {/* Role Selector (Register Mode) */}
-          {authMode === 'register' && (
-            <div className="space-y-2 pt-1">
-              <label className="block text-[11px] font-bold text-slate-300 font-mono uppercase tracking-wider">
-                SELECT OPERATIONAL ROLE
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'evaluator', label: 'Lead Evaluator', icon: Activity },
-                  { id: 'candidate', label: 'Candidate', icon: Users },
-                  { id: 'admin', label: 'Platform Admin', icon: Shield }
-                ].map((r) => {
-                  const Icon = r.icon;
-                  const isSelected = selectedRole === r.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setSelectedRole(r.id)}
-                      className={`p-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                        isSelected
-                          ? 'bg-teal-500/20 border-teal-400 text-teal-300 shadow-md shadow-teal-500/10'
-                          : 'bg-black/30 border-white/[0.08] text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <Icon size={14} className={isSelected ? 'text-teal-400' : 'text-slate-500'} />
-                      <span className="text-[11px]">{r.label}</span>
-                    </button>
-                  );
-                })}
+        <AnimatePresence mode="wait">
+          {tab === 'signin' ? (
+            <motion.form key="signin" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+              onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Email</label>
+                <input className="aurora-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@ajna.ai" required />
               </div>
-            </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input className="aurora-input" type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={{ paddingRight: 42 }} />
+                  <button type="button" onClick={() => setShowPw(!showPw)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', WebkitAppRegion: 'no-drag', display: 'flex', alignItems: 'center' }}>
+                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '11px 0', fontSize: 14, marginTop: 4, opacity: loading ? 0.6 : 1 }}>
+                <LogIn size={15} /><span>{loading ? 'Signing in...' : 'Sign In'}</span>
+              </button>
+            </motion.form>
+          ) : (
+            <motion.form key="register" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+              onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Full Name</label>
+                <input className="aurora-input" type="text" value={regName} onChange={e => setRegName(e.target.value)} placeholder="Dr. Mounika Reddy" required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Email</label>
+                <input className="aurora-input" type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} placeholder="you@ajna.ai" required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input className="aurora-input" type={showPw ? 'text' : 'password'} value={regPw} onChange={e => setRegPw(e.target.value)} placeholder="••••••••" required style={{ paddingRight: 42 }} />
+                  <button type="button" onClick={() => setShowPw(!showPw)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', WebkitAppRegion: 'no-drag', display: 'flex', alignItems: 'center' }}>
+                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Role</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {['evaluator','candidate','admin'].map(r => (
+                    <button key={r} type="button" onClick={() => setRegRole(r)}
+                      style={{ flex: 1, padding: '7px 4px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'all 0.2s', WebkitAppRegion: 'no-drag', textTransform: 'capitalize',
+                        background: regRole === r ? 'rgba(45,212,191,0.15)' : 'rgba(255,255,255,0.04)',
+                        color: regRole === r ? '#2dd4bf' : '#64748b',
+                        boxShadow: regRole === r ? '0 0 0 1px rgba(45,212,191,0.4)' : '0 0 0 1px rgba(255,255,255,0.08)',
+                      }}>{r}</button>
+                  ))}
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '11px 0', fontSize: 14, marginTop: 4, opacity: loading ? 0.6 : 1 }}>
+                <UserPlus size={15} /><span>{loading ? 'Creating...' : 'Create Account'}</span>
+              </button>
+            </motion.form>
           )}
+        </AnimatePresence>
 
-          {/* Submit Action CTA */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="aurora-btn-gradient w-full h-12 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer mt-2 shadow-xl shadow-teal-500/25"
-          >
-            <span>
-              {isLoading 
-                ? 'Verifying Telemetry...' 
-                : (authMode === 'register' ? 'Create Account & Enter' : 'Enter Ajna Workspace')}
-            </span>
-            <ArrowRight size={16} />
-          </button>
-        </form>
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+          <span style={{ fontSize: 11, color: '#475569' }}>or quick access</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+        </div>
 
-        {/* Footer Guarantee */}
-        <div className="text-center pt-1">
-          <p className="text-[11px] text-slate-500 font-mono">
-            Observable Evidence Principle • Zero AI Hallucination
-          </p>
+        {/* Demo profiles */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Demo Profiles</div>
+          {DEMO_PROFILES.map(p => (
+            <button key={p.role} onClick={() => handleDemoProfile(p)}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s', WebkitAppRegion: 'no-drag', textAlign: 'left' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = `${p.color}44`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: `${p.color}22`, border: `1px solid ${p.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: p.color, flexShrink: 0 }}>{p.initials}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</div>
+                <div style={{ fontSize: 10, color: '#64748b', textTransform: 'capitalize', fontFamily: 'var(--font-mono)' }}>{p.role}</div>
+              </div>
+              <ArrowRight size={13} style={{ color: '#475569', flexShrink: 0 }} />
+            </button>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', fontSize: 10, color: '#374151', fontFamily: 'var(--font-mono)', paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          Observable Evidence AI • Ajna v2.6
         </div>
       </motion.div>
     </div>
