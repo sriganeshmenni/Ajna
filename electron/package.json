@@ -1,0 +1,8 @@
+{
+  "name": "mhei-desktop",
+  "version": "1.0.0",
+  "description": "Multimodal Human Evaluation Intelligence Desktop Cockpit",
+  "main": "main.js",
+  "author": "Antigravity Intelligence",
+  "license": "UNLICENSED"
+}

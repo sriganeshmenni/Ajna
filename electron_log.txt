@@ -1,0 +1,193 @@
+
+[27776:1118/221659.444:INFO:CONSOLE:934] "[vite] connecting...", source: http://localhost:5173/@vite/client (934)
+[27776:1118/221659.461:INFO:CONSOLE:1047] "[vite] connected.", source: http://localhost:5173/@vite/client (1047)
+[27776:1118/221659.578:INFO:CONSOLE:15805] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=fd8cfcef (15805)
+[27776:1118/221659.724:INFO:CONSOLE:0] "Electron Security Warning (Disabled webSecurity) This renderer process has "webSecurity" disabled. This
+  exposes users of this app to severe security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: http://localhost:5173/ (0)
+[27776:1118/221659.725:INFO:CONSOLE:0] "Electron Security Warning (allowRunningInsecureContent) This renderer process has "allowRunningInsecureContent"
+  enabled. This exposes users of this app to severe security risks.
+
+  
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: http://localhost:5173/ (0)
+[27776:1118/221659.725:INFO:CONSOLE:0] "Electron Security Warning (Insecure Content-Security-Policy) This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: http://localhost:5173/ (0)
+[MHEI Electron] UI rendered and displayed.
+[MHEI Electron] Connected to Vite on http://localhost:5173
+[27776:1118/223014.508:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223042.595:INFO:CONSOLE:357] "[vite] Failed to reload /src/index.css. This could be due to syntax errors or importing non-existent modules. (see errors above)", source: http://localhost:5173/@vite/client (357)
+[27776:1118/223042.598:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223054.823:INFO:CONSOLE:934] "[vite] connecting...", source: http://localhost:5173/@vite/client (934)
+[27776:1118/223054.831:INFO:CONSOLE:1047] "[vite] connected.", source: http://localhost:5173/@vite/client (1047)
+[27776:1118/223055.404:INFO:CONSOLE:15805] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=fd8cfcef (15805)
+[27776:1118/223055.438:INFO:CONSOLE:0] "Electron Security Warning (Disabled webSecurity) This renderer process has "webSecurity" disabled. This
+  exposes users of this app to severe security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: http://localhost:5173/ (0)
+[27776:1118/223055.438:INFO:CONSOLE:0] "Electron Security Warning (allowRunningInsecureContent) This renderer process has "allowRunningInsecureContent"
+  enabled. This exposes users of this app to severe security risks.
+
+  
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: http://localhost:5173/ (0)
+[27776:1118/223055.438:INFO:CONSOLE:0] "Electron Security Warning (Insecure Content-Security-Policy) This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: http://localhost:5173/ (0)
+[MHEI Electron] UI rendered and displayed.
+[27776:1118/223148.816:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AuthPortal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223148.817:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223202.058:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AuthPortal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223202.058:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223238.874:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223238.874:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223250.581:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223250.581:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223317.301:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223317.301:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223324.567:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223324.567:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223334.527:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223334.528:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223349.303:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223349.303:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223405.916:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223405.916:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223412.234:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223412.235:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223424.754:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223424.754:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223649.577:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/PerceptionSurface.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223649.577:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223700.356:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/PerceptionSurface.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223700.356:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223713.077:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/PerceptionSurface.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223713.077:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223720.929:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223720.930:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223728.472:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223728.473:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223739.510:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223739.510:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223800.316:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223800.316:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223827.897:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AudioInstrument.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223827.898:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223850.948:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/ASRStream.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223850.948:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223902.730:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/ASRStream.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223902.730:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223918.900:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/FusionRadar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223918.900:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223937.679:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/StateEstimationInstrument.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223937.679:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223946.890:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/TemporalTimeline.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/223946.891:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224006.036:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvidenceFeed.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224006.036:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224031.931:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvaluatorNotesDrawer.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224031.931:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224101.439:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvaluatorRubricModal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224101.439:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224111.528:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvaluatorRubricModal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224111.528:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224131.790:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/ReportModal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224131.790:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224150.697:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandPalette.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224150.697:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224206.898:INFO:CONSOLE:357] "[vite] Failed to reload /src/index.css. This could be due to syntax errors or importing non-existent modules. (see errors above)", source: http://localhost:5173/@vite/client (357)
+[27776:1118/224206.898:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224413.443:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224420.764:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/224427.052:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/225938.388:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230003.882:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230027.979:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230043.958:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230120.340:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230120.340:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230152.936:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230152.936:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230220.126:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AudioInstrument.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230220.126:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230236.724:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/ASRStream.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230236.724:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230245.808:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/ASRStream.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230245.809:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230309.730:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/StateEstimationInstrument.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230309.730:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230323.978:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvidenceFeed.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230323.979:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230341.090:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EngineStatusIndicator.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230341.090:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230400.557:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/PerceptionSurface.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230400.557:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230413.104:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/PerceptionSurface.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230413.104:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230441.211:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230441.211:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230512.798:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230512.798:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230605.685:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230628.112:INFO:CONSOLE:1015] "[vite] hot updated: /src/App.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230628.112:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230814.031:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AuthPortal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230814.031:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230817.904:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AuthPortal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230817.904:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230831.053:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AuthPortal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230831.053:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230834.614:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AuthPortal.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/230834.614:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232154.284:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232208.751:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232221.996:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232221.996:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AjnaAmbientBackground.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232234.020:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/PerceptionSurface.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232234.020:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232445.297:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232445.297:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232516.564:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232516.564:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232549.040:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232549.040:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232602.266:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CandidateCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232602.266:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232618.461:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232618.462:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232638.513:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/AdminCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232638.513:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232712.125:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvaluatorCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232712.125:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232717.077:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/EvaluatorCockpit.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232717.077:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232731.814:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232731.814:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232742.739:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232742.739:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232801.518:INFO:CONSOLE:1015] "[vite] hot updated: /src/components/CommandBar.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232801.518:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232824.451:INFO:CONSOLE:1015] "[vite] hot updated: /src/App.jsx", source: http://localhost:5173/@vite/client (1015)
+[27776:1118/232824.451:INFO:CONSOLE:1015] "[vite] hot updated: /src/index.css", source: http://localhost:5173/@vite/client (1015)
